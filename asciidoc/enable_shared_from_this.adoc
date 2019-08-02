@@ -1,0 +1,167 @@
+:language: C
+
+
+about enable_shared_from_this
+-------------------------------
+
+Purpose
+~~~~~~~
+
+according to boost's doc, enable_shared_from_this is a template class, it's used as a base class that allows a shared_ptr to the current object to be obtainerd from within a member function.
+the usage of this template must still be obscure to you through even you have read the explanation, and i will give some examples where need it.
+
+[code,C]
+--------
+#include <memory>
+#include <iostream>
+
+using std::shared_ptr;
+using std::cout;
+
+struct Foo {
+    ~Foo() {
+        cout << "destructor called\n";
+    }   
+
+    void function() {
+        funcNeedFoo(shared_ptr<Foo>(this));
+    }   
+
+    void funcNeedFoo(shared_ptr<Foo> ptr) {
+        // do dome stuff about Foo
+    }   
+};
+
+int main() {
+    shared_ptr<Foo> ptr(new Foo);   
+    ptr->function();
+}
+--------
+
+in the code above, funcNeedFoo is Foo's member function, and need a self type shared_ptr as its argument, you can try guess the console output, the result is double lines of "destructor called", but why?
+
+the reason is that we allocate a single instance of Foo, but two shared_ptr has the ownership of this raw pointer. how can we make this code snappet right? enable_shared_from_this will be the rescuer. and the correct code is:
+
+[code,C]
+--------
+#include <memory>
+#include <iostream>
+
+using std::shared_ptr;
+using std::cout;
+
+struct Foo : std::enable_shared_from_this<Foo> {
+    ~Foo() {
+        cout << "destructor called\n";
+    }
+
+    void function() {
+        funcNeedFoo(shared_from_this());
+    }
+
+    void funcNeedFoo(shared_ptr<Foo> ptr) {
+    }
+};
+
+int main() {
+    shared_ptr<Foo> ptr(new Foo);
+    ptr->function();
+}
+--------
+
+maybe you have understand when to use enable_shared_from_this, but i think it's necessary to know the implementation of it.
+
+Implementation of enable_shared_from_this
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+first I will give the boost library implemention of it.
+
+[code,C]
+--------
+template<class T> class enable_shared_from_this
+{
+protected:
+
+    enable_shared_from_this() BOOST_NOEXCEPT
+    {
+    }
+
+    enable_shared_from_this(enable_shared_from_this const &) BOOST_NOEXCEPT
+    {
+    }
+
+    enable_shared_from_this & operator=(enable_shared_from_this const &) BOOST_NOEXCEPT
+    {
+        return *this;
+    }
+
+    ~enable_shared_from_this() BOOST_NOEXCEPT // ~weak_ptr<T> newer throws, so this call also must not throw
+    {
+    }
+
+public:
+
+    shared_ptr<T> shared_from_this()
+    {
+        shared_ptr<T> p( weak_this_ );
+        BOOST_ASSERT( p.get() == this );
+        return p;
+    }
+
+    shared_ptr<T const> shared_from_this() const
+    {
+        shared_ptr<T const> p( weak_this_ );
+        BOOST_ASSERT( p.get() == this );
+        return p;
+    }
+
+    weak_ptr<T> weak_from_this() BOOST_NOEXCEPT
+    {
+        return weak_this_;
+    }
+
+    weak_ptr<T const> weak_from_this() const BOOST_NOEXCEPT
+    {
+        return weak_this_;
+    }
+
+public: // actually private, but avoids compiler template friendship issues
+
+    // Note: invoked automatically by shared_ptr; do not call
+    template<class X, class Y> void _internal_accept_owner( shared_ptr<X> const * ppx, Y * py ) const
+    {
+        if( weak_this_.expired() )
+        {
+            weak_this_ = shared_ptr<T>( *ppx, py );
+        }
+    }
+
+private:
+
+    mutable weak_ptr<T> weak_this_;
+};
+--------
+the key point is the *internal_accept_owner* function, and as the Note saied, it invoked automatically by shared_ptr, this function initialized *weak_this_*, and the result of shared_from_this is initialized from this weak_this_ member;
+how weak_ptr is implemented, i don't know yet, but after you run the code bellow, you maybe get something.
+
+[code,C]
+--------
+#include <iostream>
+#include <memory>
+
+struct Foo {
+};
+
+void func(std::weak_ptr<Foo> ptr)
+{
+	std::shared_ptr<Foo> x(ptr);
+	std::cout << x.use_count() << "\n";
+}
+
+int main()
+{
+	std::shared_ptr<Foo> sPtr(new Foo);
+	std::weak_ptr<Foo> wkPtr = sPtr;
+	func(wkPtr);
+}
+--------
