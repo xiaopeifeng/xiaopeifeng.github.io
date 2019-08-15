@@ -1,8 +1,8 @@
 ---
 layout: default
-title: the explantation of syscall listen's second argument **backlog**
+title: the explantation of syscall listen second argument backlog
 ---
-## ## the explantation of syscall listen's second argument **backlog**
+## the explantation of syscall listen second argument backlog
 ------
 
 Almost every programming had learned writing simple socket program at school, and while writing network service program, you almost always use system call *listen* to open a port and start set it to listening state just as its name hint,  then if there's incomming connection, you can accept it and do the next business. the syscall *listen* has two parameters,
@@ -34,7 +34,7 @@ tcp connection is initialized through a handshake procudure, and after this proc
 
 let's check it from the linux kernel code, and make sure  how was the backlog working.
 
-![](.\kernel_listen0.png)
+![](./kernel_listen0.png)
 
 as you can see at line 1586, backlog value is set to somaxconn if its value more bigger. line 1588 is just a length value security check, just ignore it, line 1590 is the real working code. the function pointer address was function '*inet_listen*', and code as follow:
 
