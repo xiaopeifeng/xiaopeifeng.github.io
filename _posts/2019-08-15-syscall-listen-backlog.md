@@ -40,13 +40,13 @@ let's check it from the linux kernel code, and make sure  how was the backlog wo
 
 as you can see at line 1586, backlog value is set to somaxconn if its value more bigger. line 1588 is just a length value security check, just ignore it, line 1590 is the real working code. the function pointer address was function '*inet_listen*', and code as follow:
 
-![img](./kernel_listen1.png)
+![kernel_listen1](https://user-images.githubusercontent.com/7620721/63137089-5da66200-c007-11e9-97ed-7c9f7942adad.png)
 
 line 235 was its real routine, let's go on the code path:
 
-![img](./kernel_listen2.png)
+![kernel_listen2](https://user-images.githubusercontent.com/7620721/63137287-3603c980-c008-11e9-8bdc-5b20d820d183.png)
 
-![img](./kernel_listen3.png)
+![kernel_listen3](https://user-images.githubusercontent.com/7620721/63137321-592e7900-c008-11e9-8042-a2232c266248.png)
 
 the final queue length was compute from line 46,47,48.
 
