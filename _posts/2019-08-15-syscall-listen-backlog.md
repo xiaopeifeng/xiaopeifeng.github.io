@@ -36,7 +36,7 @@ tcp connection is initialized through a handshake procudure, and after this proc
 
 let's check it from the linux kernel code, and make sure  how was the backlog working.
 
-![img](./kernel_listen0.png)
+![kernel_listen0](https://user-images.githubusercontent.com/7620721/63136953-ecff4580-c006-11e9-8726-dd035204c523.png)
 
 as you can see at line 1586, backlog value is set to somaxconn if its value more bigger. line 1588 is just a length value security check, just ignore it, line 1590 is the real working code. the function pointer address was function '*inet_listen*', and code as follow:
 
