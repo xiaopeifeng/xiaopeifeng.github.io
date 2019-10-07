@@ -3,9 +3,6 @@ layout: default
 title: why libcurl coredump under no networking environment?
 ---
 
-------
-
-
 ### why libcurl coredump under no networking environment?
 
 libcurl is often used by c programmer as a http client library, and I found a client program coredump happend under no network condition. the program is depending on libcurl, and I try to  use gdb to watch stack frame info after  coredump happened, but i reap nothing. After a longtime watching and analyse the  running log, I found some unimaginable fact, that thread id was changed. this program is consist of multiple thread, and the worker thread do some http communacation with server side under the help of libcurl. the worker id was changged every time coredump happened, and this is the only clue I found. Stack overflow? I try to increase the thread stack size, but it does not help. No coredump file, No clue, I have no such experience, so i can only get help from Google.
