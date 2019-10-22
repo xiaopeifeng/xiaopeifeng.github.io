@@ -1,9 +1,9 @@
-find detail memory info from coredump file
 ---
 layout: default
 title: find detail memory info from coredump file
 ---
-​	Recently I write a C project at work, and this project has a log module depended on a tiny third party source file. I wrote a logger callback implementation for the log interface.  the  callback function will format the log content and write it to log file.  I use the synchrous writing log pattern, because it's not a performance sensitive program. So it will take up worker thread's time, and the buffer will be flush to disk every N seconds. Many programs usually use another asynchorous pattern which has a special log thread to write log, this pattern will not wast worker thread's time, but have you think that both of these two patterns has a same problem while the program crashed? log writting module usually won't write its content to  disk directly for performace consideration. So if coredump happened, some log content will be lost which is very valuable for analysing the bug.
+
+Recently I write a C project at work, and this project has a log module depended on a tiny third party source file. I wrote a logger callback implementation for the log interface.  the  callback function will format the log content and write it to log file.  I use the synchrous writing log pattern, because it's not a performance sensitive program. So it will take up worker thread's time, and the buffer will be flush to disk every N seconds. Many programs usually use another asynchorous pattern which has a special log thread to write log, this pattern will not wast worker thread's time, but have you think that both of these two patterns has a same problem while the program crashed? log writting module usually won't write its content to  disk directly for performace consideration. So if coredump happened, some log content will be lost which is very valuable for analysing the bug.
 
 ​	core file is valuable for analysing the bug, if we want to see the last log content before core dump event happened?
 
